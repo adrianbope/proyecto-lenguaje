@@ -98,25 +98,18 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
 <script>
-let session = JSON.parse(localStorage.getItem('session'));
-let balance = session ? session.balance : 1000;
-let currentBets = [], lastBets = [], selectedChip = 10;
+/* === BALANCE DESDE LOCALSTORAGE === */
+let savedBalance = localStorage.getItem("balance");
+let balance = savedBalance !== null ? parseInt(savedBalance) : 1000;
 
+let currentBets = [], lastBets = [], selectedChip = 10;
 let winIdx = 0, isSpinning = false, ballAngle = 0, ballSpeed = 0;
+
 const reds = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
 const wheelOrder = [0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
 
 function saveBalance(){
-    let s = JSON.parse(localStorage.getItem('session'));
-    if(!s) return;
-    s.balance = balance;
-
-    let users = JSON.parse(localStorage.getItem('users')) || [];
-    let i = users.findIndex(u => u.user === s.user);
-    if(i !== -1) users[i] = s;
-
-    localStorage.setItem('users', JSON.stringify(users));
-    localStorage.setItem('session', JSON.stringify(s));
+    localStorage.setItem("balance", balance);
 }
 
 const grid = document.getElementById('grid-container');
@@ -177,7 +170,7 @@ function updateUI() {
     document.getElementById('repeat-btn').disabled = (lastBets.length === 0 || isSpinning);
 }
 
-// === THREE.JS ===
+/* === THREE.JS === */
 const canvas = document.getElementById("ruleta-canvas");
 const renderer = new THREE.WebGLRenderer({ antialias: true, canvas: canvas });
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -196,12 +189,12 @@ wheelOrder.forEach((num, i) => {
     box.rotation.y = -angle + Math.PI/2;
     wheelGroup.add(box);
 
-    const canvasNum = document.createElement('canvas'); 
-    const ctx = canvasNum.getContext('2d');
-    canvasNum.width = 64; canvasNum.height = 64;
+    const c2 = document.createElement('canvas'); 
+    const ctx = c2.getContext('2d');
+    c2.width = 64; c2.height = 64;
     ctx.fillStyle = "white"; ctx.font = "bold 38px Arial"; ctx.textAlign = "center";
     ctx.fillText(num, 32, 45);
-    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(canvasNum) }));
+    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c2) }));
     sprite.scale.set(0.75, 0.75, 1); 
     sprite.position.set(Math.cos(angle) * 3.6, 0.55, Math.sin(angle) * 3.6);
     wheelGroup.add(sprite);
@@ -277,6 +270,8 @@ function closeWinMsg() {
     currentBets = [];
     updateUI();
 }
+
+updateUI();
 </script>
 </body>
 </html>
