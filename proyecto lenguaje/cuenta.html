@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Sistema de Usuario</title>
+<style>
+* { box-sizing: border-box; }
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #273c75, #44bd32);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+.container {
+    background: #fff;
+    padding: 30px;
+    width: 400px;
+    border-radius: 14px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.25);
+}
+h1,h2 { text-align: center; margin-bottom: 15px; color:#2f3640; }
+.section { display:none; }
+input, select, button {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 12px;
+    border-radius: 8px;
+    border: 1px solid #dcdde1;
+}
+button {
+    background: #44bd32;
+    color: white;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+}
+button:hover { background:#4cd137; }
+.secondary { background:#718093; }
+.secondary:hover { background:#636e72; }
+.error { color:#e84118; text-align:center; margin-bottom:10px; }
+.balance-box {
+    background:#f1f2f6;
+    padding:12px;
+    border-radius:8px;
+    text-align:center;
+    font-size:18px;
+    margin-bottom:15px;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<div id="home">
+    <h1>Bienvenido</h1>
+    <button onclick="show('login')">Iniciar sesión</button>
+    <button onclick="show('register')">Registrarse</button>
+</div>
+
+<div id="login" class="section">
+    <h2>Iniciar sesión</h2>
+    <p id="loginError" class="error"></p>
+    <form onsubmit="login(event)">
+        <input id="loginUser" placeholder="Usuario" required>
+        <input id="loginPass" type="password" placeholder="Contraseña" required>
+        <button>Entrar</button>
+    </form>
+    <button class="secondary" onclick="goHome()">⬅ Volver</button>
+</div>
+
+<div id="register" class="section">
+    <h2>Registro</h2>
+    <p id="regError" class="error"></p>
+    <form onsubmit="register(event)">
+        <input id="regUser" placeholder="Usuario" required>
+        <input id="dni" placeholder="DNI" required>
+        <input id="email" type="email" placeholder="Correo electrónico" required>
+        <input id="birth" type="date" required>
+        <button type="button" onclick="sendCode()">Enviar código</button>
+        <input id="codeInput" placeholder="Código recibido" required>
+        <input id="regPass" type="password" placeholder="Contraseña" required>
+        <button>Registrarse</button>
+    </form>
+    <button class="secondary" onclick="goHome()">⬅ Volver</button>
+</div>
+
+<div id="dashboard" class="section">
+    <h2>Panel de usuario</h2>
+    <p><strong>Usuario:</strong> <span id="userName"></span></p>
+    <div class="balance-box">
+        Balance: $<span id="balance">0.00</span>
+    </div>
+    <input id="amount" type="number" step="0.01" placeholder="Añadir balance">
+    <button onclick="addBalance()">Añadir balance</button>
+    <button onclick="goToRoulette()">🎰 Ir a la ruleta</button>
+    <button class="secondary" onclick="logout()">Cerrar sesión</button>
+</div>
+
+</div>
+
+<script>
+let emailCode = null;
+
+// Navegación
+function show(id){
+    document.querySelectorAll('.section,#home').forEach(e=>e.style.display='none');
+    document.getElementById(id).style.display='block';
+}
+function goHome(){
+    document.querySelectorAll('.section').forEach(e=>e.style.display='none');
+    home.style.display='block';
+}
+
+// Código email (simulado)
+function sendCode(){
+    emailCode=Math.floor(100000+Math.random()*900000);
+    alert("Código enviado (simulado): "+emailCode);
+}
+
+// Registro
+function register(e){
+    e.preventDefault();
+    regError.innerText="";
+    let users=JSON.parse(localStorage.getItem('users')||'[]');
+    if(users.find(u=>u.user==regUser.value))
+        return regError.innerText="Usuario ya existe";
+    users.push({
+        user:regUser.value,
+        pass:regPass.value,
+        balance:0
+    });
+    localStorage.setItem('users',JSON.stringify(users));
+    alert("Registro exitoso");
+    goHome();
+}
+
+// Login
+function login(e){
+    e.preventDefault();
+    loginError.innerText="";
+    let users=JSON.parse(localStorage.getItem('users')||'[]');
+    let u=users.find(x=>x.user==loginUser.value&&x.pass==loginPass.value);
+    if(!u) return loginError.innerText="Credenciales incorrectas";
+    localStorage.setItem('session',JSON.stringify(u));
+    loadPanel();
+    show('dashboard');
+}
+
+// Panel
+function loadPanel(){
+    let u=JSON.parse(localStorage.getItem('session'));
+    if(!u) return;
+    userName.innerText=u.user;
+    balance.innerText=u.balance.toFixed(2);
+}
+
+// Balance
+function addBalance(){
+    let amt=parseFloat(amount.value);
+    if(isNaN(amt)||amt<=0) return;
+    let u=JSON.parse(localStorage.getItem('session'));
+    u.balance+=amt;
+
+    let users=JSON.parse(localStorage.getItem('users'));
+    let i=users.findIndex(x=>x.user==u.user);
+    users[i]=u;
+
+    localStorage.setItem('users',JSON.stringify(users));
+    localStorage.setItem('session',JSON.stringify(u));
+    loadPanel();
+    amount.value="";
+}
+
+function goToRoulette(){
+    location.href="ruleta.html";
+}
+
+// Logout
+function logout(){
+    localStorage.removeItem('session');
+    goHome();
+}
+
+// Mantener sesión
+window.onload=()=>{
+    if(localStorage.getItem('session')){
+        loadPanel();
+        show('dashboard');
+    }
+}
+</script>
+
+</body>
+</html>

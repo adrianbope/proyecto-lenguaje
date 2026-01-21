@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Ruleta 3D - Balance Real</title>
+<style>
+body { margin:0; overflow:hidden; background:#000; font-family:'Segoe UI',sans-serif; color:white; }
+#ui-layer { position:absolute; inset:0; pointer-events:none; }
+
+#info { position:absolute; top:20px; left:20px; background:rgba(0,0,0,.9); padding:15px; border-radius:10px; border:1px solid gold; pointer-events:auto; }
+.balance { font-size:24px; color:gold; font-weight:bold; }
+
+#betting-container { position:absolute; bottom:20px; left:50%; transform:translateX(-50%); width:600px; pointer-events:auto; }
+#betting-area { background:rgba(0,40,10,.95); padding:20px; border-radius:15px; border:2px solid #daa520; display:flex; flex-direction:column; gap:10px; }
+
+.chip { width:45px;height:45px;border-radius:50%;border:3px dashed white;display:flex;align-items:center;justify-content:center;font-weight:bold;cursor:pointer; }
+.chip.active { transform:translateY(-8px);border-style:solid; }
+.chip-10{background:#3498db;} .chip-50{background:#e67e22;} .chip-100{background:#9b59b6;} .chip-500{background:#c0392b;}
+
+.numbers-grid{display:grid;grid-template-columns:repeat(13,1fr);gap:4px;}
+.num-btn{width:40px;height:50px;display:flex;align-items:center;justify-content:center;font-weight:bold;cursor:pointer;}
+.red{background:#c0392b;} .black{background:#2c3e50;} .green{background:#27ae60;}
+
+#spin-btn{background:gold;color:black;padding:15px;border-radius:40px;font-size:20px;font-weight:bold;cursor:pointer;}
+</style>
+</head>
+<body>
+
+<div id="ui-layer">
+  <div id="info">
+    <div class="balance">💰 $<span id="balance-val">0</span></div>
+    <div id="active-total">Total Apostado: $0</div>
+  </div>
+
+  <div id="betting-container">
+    <div id="betting-area">
+      <div style="display:flex;gap:10px">
+        <div class="chip chip-10 active" onclick="selectChip(10,this)">10</div>
+        <div class="chip chip-50" onclick="selectChip(50,this)">50</div>
+        <div class="chip chip-100" onclick="selectChip(100,this)">100</div>
+        <div class="chip chip-500" onclick="selectChip(500,this)">500</div>
+      </div>
+
+      <div class="numbers-grid" id="grid-container"></div>
+
+      <button id="spin-btn" onclick="spin()">GIRAR RULETA</button>
+      <button onclick="backToPanel()">⬅ Volver al panel</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ===== SESIÓN =====
+let session = JSON.parse(localStorage.getItem('session'));
+if(!session){
+  alert("Debes iniciar sesión primero");
+  location.href="cuenta.html";
+}
+let balance = session.balance;
+
+// ===== APUESTAS =====
+let selectedChip = 10;
+let currentBets = [];
+const reds=[1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
+
+function saveBalance(){
+  let s = JSON.parse(localStorage.getItem('session'));
+  s.balance = balance;
+  let users = JSON.parse(localStorage.getItem('users'));
+  let i = users.findIndex(u=>u.user===s.user);
+  if(i!==-1) users[i]=s;
+  localStorage.setItem('users',JSON.stringify(users));
+  localStorage.setItem('session',JSON.stringify(s));
+}
+
+function updateUI(){
+  document.getElementById('balance-val').innerText = balance.toFixed(2);
+  let total = currentBets.reduce((a,b)=>a+b.amount,0);
+  document.getElementById('active-total').innerText = "Total Apostado: $"+total;
+}
+
+function selectChip(v,el){
+  selectedChip=v;
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+}
+
+const grid=document.getElementById('grid-container');
+for(let i=0;i<=36;i++){
+  let b=document.createElement('div');
+  b.className="num-btn "+(i===0?'green':(reds.includes(i)?'red':'black'));
+  b.innerText=i;
+  b.onclick=()=>bet(i);
+  grid.appendChild(b);
+}
+
+function bet(num){
+  if(balance<selectedChip) return alert("Sin saldo suficiente");
+  balance-=selectedChip;
+  currentBets.push({num,amount:selectedChip});
+  saveBalance();
+  updateUI();
+}
+
+function spin(){
+  if(currentBets.length===0) return alert("Haz una apuesta primero");
+  let win=Math.floor(Math.random()*37);
+  let totalWon=0;
+  currentBets.forEach(b=>{
+    if(b.num===win) totalWon+=b.amount*36;
+  });
+  balance+=totalWon;
+  alert("Salió: "+win+"\nGanaste: $"+totalWon);
+  currentBets=[];
+  saveBalance();
+  updateUI();
+}
+
+function backToPanel(){
+  location.href="cuenta.html";
+}
+
+updateUI();
+</script>
+
+</body>
+</html>
