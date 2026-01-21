@@ -50,9 +50,13 @@
             background: rgba(0,0,0,0.98); padding: 40px; border-radius: 20px; text-align: center;
             display: none; border: 4px solid #ffd700; pointer-events: auto; z-index: 1000;
         }
+
+        canvas { display:block; }
     </style>
 </head>
 <body>
+
+<canvas id="ruleta-canvas"></canvas>
 
 <div id="ui-layer">
     <div id="info">
@@ -173,12 +177,13 @@ function updateUI() {
     document.getElementById('repeat-btn').disabled = (lastBets.length === 0 || isSpinning);
 }
 
-// Three.js
+// === THREE.JS ===
+const canvas = document.getElementById("ruleta-canvas");
+const renderer = new THREE.WebGLRenderer({ antialias: true, canvas: canvas });
+renderer.setSize(window.innerWidth, window.innerHeight);
+
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(40, window.innerWidth/window.innerHeight, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
 
 const wheelGroup = new THREE.Group();
 const wheelBase = new THREE.Mesh(new THREE.CylinderGeometry(5, 5, 0.8, 64), new THREE.MeshPhongMaterial({ color: 0x1a1a1a, shininess: 50 }));
@@ -191,12 +196,12 @@ wheelOrder.forEach((num, i) => {
     box.rotation.y = -angle + Math.PI/2;
     wheelGroup.add(box);
 
-    const canvas = document.createElement('canvas'); 
-    const ctx = canvas.getContext('2d');
-    canvas.width = 64; canvas.height = 64;
+    const canvasNum = document.createElement('canvas'); 
+    const ctx = canvasNum.getContext('2d');
+    canvasNum.width = 64; canvasNum.height = 64;
     ctx.fillStyle = "white"; ctx.font = "bold 38px Arial"; ctx.textAlign = "center";
     ctx.fillText(num, 32, 45);
-    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(canvas) }));
+    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(canvasNum) }));
     sprite.scale.set(0.75, 0.75, 1); 
     sprite.position.set(Math.cos(angle) * 3.6, 0.55, Math.sin(angle) * 3.6);
     wheelGroup.add(sprite);
@@ -205,11 +210,13 @@ scene.add(wheelGroup);
 
 const ball = new THREE.Mesh(new THREE.SphereGeometry(0.18, 32, 32), new THREE.MeshPhongMaterial({ color: 0xffffff, shininess: 100 }));
 wheelGroup.add(ball);
-ball.position.set(Math.cos(0)*4.4, 0.5, Math.sin(0)*4.4);
+ball.position.set(4.4, 0.5, 0);
 
-scene.add(new THREE.PointLight(0xffffff, 1.5, 100).clone().translateY(10));
+scene.add(new THREE.PointLight(0xffffff, 1.5, 100).position.set(0,10,0));
 scene.add(new THREE.AmbientLight(0x404040));
-camera.position.set(0, 12, 4); camera.lookAt(0, 0, 0);
+
+camera.position.set(0, 12, 4);
+camera.lookAt(0, 0, 0);
 
 function animate() {
     requestAnimationFrame(animate);
@@ -235,12 +242,7 @@ function stopBall() {
 function spinWheel() {
     if (isSpinning || currentBets.length === 0) return;
     lastBets = currentBets.map(b => ({...b}));
-    const globalPos = new THREE.Vector3();
-    ball.getWorldPosition(globalPos);
-    scene.add(ball);
-    ball.position.copy(globalPos);
-    ballAngle = Math.atan2(ball.position.z, ball.position.x);
-    document.getElementById('betting-container').classList.add('hidden');
+    ballAngle = 0;
     winIdx = Math.floor(Math.random() * 37);
     ballSpeed = 0.52; 
     isSpinning = true;
