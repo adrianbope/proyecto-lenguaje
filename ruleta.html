@@ -108,18 +108,8 @@ const wheelOrder = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 
 
 function saveBalance(){
     localStorage.setItem("balance", balance);
-    let s = JSON.parse(localStorage.getItem('session'));
-    if(!s) return;
-
-    s.balance = balance;
-
-    let users = JSON.parse(localStorage.getItem('users'));
-    let i = users.findIndex(u => u.user === s.user);
-    if(i !== -1) users[i] = s;
-
-    localStorage.setItem('users', JSON.stringify(users));
-    localStorage.setItem('session', JSON.stringify(s));
 }
+
 
 // Setup Tablero con Badges
 const grid = document.getElementById('grid-container');
