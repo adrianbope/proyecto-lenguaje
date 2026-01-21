@@ -6,6 +6,7 @@
     <style>
         body { margin: 0; overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif; color: white; }
         #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+        
         #info { position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.9); padding: 15px; border-radius: 10px; border: 1px solid #ffd700; pointer-events: auto; }
         .balance { font-size: 24px; color: #ffd700; font-weight: bold; }
 
@@ -20,6 +21,7 @@
             border: 2px solid #daa520; display: flex; flex-direction: column; align-items: center; gap: 12px;
         }
 
+        /* Fichas */
         .chip-selector { display: flex; gap: 10px; margin-bottom: 5px; }
         .chip { 
             width: 45px; height: 45px; border-radius: 50%; border: 3px dashed white; 
@@ -30,6 +32,7 @@
         .chip-10 { background: #3498db; } .chip-50 { background: #e67e22; }
         .chip-100 { background: #9b59b6; } .chip-500 { background: #c0392b; }
 
+        /* Tablero */
         .numbers-grid { display: grid; grid-template-columns: repeat(13, 1fr); gap: 4px; }
         .num-btn { 
             width: 40px; height: 50px; border: 1px solid rgba(255,255,255,0.2); cursor: pointer; 
@@ -42,7 +45,8 @@
         }
 
         .red { background: #c0392b; } .black { background: #2c3e50; } .green { background: #27ae60; }
-        .action-btn { background: #444; color: white; border: 1px solid #777; padding: 10px 15px; cursor: pointer; font-size: 12px; font-weight: bold; border-radius: 5px; flex: 1; }
+        
+        .action-btn { background: #444; color: white; border: 1px solid #777; padding: 10px 15px; cursor: pointer; font-size: 12px; font-weight: bold; border-radius: 5px; flex: 1; position: relative; }
         #spin-btn { background: #ffd700; color: black; border: none; padding: 15px 80px; font-size: 20px; border-radius: 50px; cursor: pointer; font-weight: bold; margin-top: 10px; }
 
         #win-msg { 
@@ -50,13 +54,9 @@
             background: rgba(0,0,0,0.98); padding: 40px; border-radius: 20px; text-align: center;
             display: none; border: 4px solid #ffd700; pointer-events: auto; z-index: 1000;
         }
-
-        canvas { display:block; }
     </style>
 </head>
 <body>
-
-<canvas id="ruleta-canvas"></canvas>
 
 <div id="ui-layer">
     <div id="info">
@@ -74,10 +74,10 @@
     <div id="betting-container">
         <div id="betting-area">
             <div class="chip-selector">
-                <div class="chip chip-10 active" onclick="selectChip(10, this)">10</div>
-                <div class="chip chip-50" onclick="selectChip(50, this)">50</div>
-                <div class="chip chip-100" onclick="selectChip(100, this)">100</div>
-                <div class="chip chip-500" onclick="selectChip(500, this)">500</div>
+                <div class="chip chip-10 active" onclick="selectChip(10)">10</div>
+                <div class="chip chip-50" onclick="selectChip(50)">50</div>
+                <div class="chip chip-100" onclick="selectChip(100)">100</div>
+                <div class="chip chip-500" onclick="selectChip(500)">500</div>
             </div>
 
             <div class="numbers-grid" id="grid-container"></div>
@@ -98,20 +98,30 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
 <script>
-/* === BALANCE DESDE LOCALSTORAGE === */
 let savedBalance = localStorage.getItem("balance");
 let balance = savedBalance !== null ? parseInt(savedBalance) : 1000;
-
 let currentBets = [], lastBets = [], selectedChip = 10;
-let winIdx = 0, isSpinning = false, ballAngle = 0, ballSpeed = 0;
 
-const reds = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
-const wheelOrder = [0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
+let winIdx = 0, isSpinning = false, ballAngle = 0, ballSpeed = 0;
+const reds = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
+const wheelOrder = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
 
 function saveBalance(){
     localStorage.setItem("balance", balance);
+    let s = JSON.parse(localStorage.getItem('session'));
+    if(!s) return;
+
+    s.balance = balance;
+
+    let users = JSON.parse(localStorage.getItem('users'));
+    let i = users.findIndex(u => u.user === s.user);
+    if(i !== -1) users[i] = s;
+
+    localStorage.setItem('users', JSON.stringify(users));
+    localStorage.setItem('session', JSON.stringify(s));
 }
 
+// Setup Tablero con Badges
 const grid = document.getElementById('grid-container');
 [...wheelOrder].sort((a,b)=>a-b).forEach(n => {
     const btn = document.createElement('div');
@@ -121,10 +131,10 @@ const grid = document.getElementById('grid-container');
     grid.appendChild(btn);
 });
 
-function selectChip(val, el) {
+function selectChip(val) {
     selectedChip = val;
     document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-    el.classList.add('active');
+    event.target.classList.add('active');
 }
 
 function addBet(type, m) {
@@ -132,8 +142,11 @@ function addBet(type, m) {
         balance -= selectedChip;
         saveBalance();
         const existingBet = currentBets.find(b => b.type === type);
-        if (existingBet) existingBet.amount += selectedChip;
-        else currentBets.push({ type, multiplier: m, amount: selectedChip });
+        if (existingBet) {
+            existingBet.amount += selectedChip;
+        } else {
+            currentBets.push({ type, multiplier: m, amount: selectedChip });
+        }
         updateUI();
     }
 }
@@ -160,23 +173,28 @@ function repeatLastBet() {
 function updateUI() {
     document.getElementById('balance-val').innerText = balance;
     let totalApostado = 0;
+    
     document.querySelectorAll('.bet-badge').forEach(b => { b.innerText = "0"; b.style.display = "none"; });
+    
     currentBets.forEach(bet => {
         totalApostado += bet.amount;
         const badge = document.getElementById(`badge-${bet.type}`);
-        if (badge) { badge.innerText = `$${bet.amount}`; badge.style.display = "block"; }
+        if (badge) {
+            badge.innerText = `$${bet.amount}`;
+            badge.style.display = "block";
+        }
     });
+    
     document.getElementById('active-total').innerText = `Total Apostado: $${totalApostado}`;
     document.getElementById('repeat-btn').disabled = (lastBets.length === 0 || isSpinning);
 }
 
-/* === THREE.JS === */
-const canvas = document.getElementById("ruleta-canvas");
-const renderer = new THREE.WebGLRenderer({ antialias: true, canvas: canvas });
-renderer.setSize(window.innerWidth, window.innerHeight);
-
+// Three.js
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(40, window.innerWidth/window.innerHeight, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
 
 const wheelGroup = new THREE.Group();
 const wheelBase = new THREE.Mesh(new THREE.CylinderGeometry(5, 5, 0.8, 64), new THREE.MeshPhongMaterial({ color: 0x1a1a1a, shininess: 50 }));
@@ -189,34 +207,28 @@ wheelOrder.forEach((num, i) => {
     box.rotation.y = -angle + Math.PI/2;
     wheelGroup.add(box);
 
-    const c2 = document.createElement('canvas'); 
-    const ctx = c2.getContext('2d');
-    c2.width = 64; c2.height = 64;
-    ctx.fillStyle = "white"; ctx.font = "bold 38px Arial"; ctx.textAlign = "center";
+    const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d');
+    canvas.width = 64; canvas.height = 64; ctx.fillStyle = "white"; ctx.font = "bold 38px Arial"; ctx.textAlign = "center";
     ctx.fillText(num, 32, 45);
-    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c2) }));
-    sprite.scale.set(0.75, 0.75, 1); 
-    sprite.position.set(Math.cos(angle) * 3.6, 0.55, Math.sin(angle) * 3.6);
+    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(canvas) }));
+    sprite.scale.set(0.75, 0.75, 1); sprite.position.set(Math.cos(angle) * 3.6, 0.55, Math.sin(angle) * 3.6);
     wheelGroup.add(sprite);
 });
 scene.add(wheelGroup);
 
 const ball = new THREE.Mesh(new THREE.SphereGeometry(0.18, 32, 32), new THREE.MeshPhongMaterial({ color: 0xffffff, shininess: 100 }));
 wheelGroup.add(ball);
-ball.position.set(4.4, 0.5, 0);
+ball.position.set(Math.cos(0)*4.4, 0.5, Math.sin(0)*4.4);
 
-scene.add(new THREE.PointLight(0xffffff, 1.5, 100).position.set(0,10,0));
+scene.add(new THREE.PointLight(0xffffff, 1.5, 100).clone().translateY(10));
 scene.add(new THREE.AmbientLight(0x404040));
-
-camera.position.set(0, 12, 4);
-camera.lookAt(0, 0, 0);
+camera.position.set(0, 12, 4); camera.lookAt(0, 0, 0);
 
 function animate() {
     requestAnimationFrame(animate);
     wheelGroup.rotation.y += 0.015;
     if (isSpinning) {
-        ballSpeed *= 0.982; 
-        ballAngle -= ballSpeed;
+        ballSpeed *= 0.982; ballAngle -= ballSpeed;
         ball.position.set(Math.cos(ballAngle)*4.75, 0.6, Math.sin(ballAngle)*4.75);
         if (ballSpeed < 0.05) stopBall();
     }
@@ -235,10 +247,14 @@ function stopBall() {
 function spinWheel() {
     if (isSpinning || currentBets.length === 0) return;
     lastBets = currentBets.map(b => ({...b}));
-    ballAngle = 0;
+    const globalPos = new THREE.Vector3();
+    ball.getWorldPosition(globalPos);
+    scene.add(ball);
+    ball.position.copy(globalPos);
+    ballAngle = Math.atan2(ball.position.z, ball.position.x);
+    document.getElementById('betting-container').classList.add('hidden');
     winIdx = Math.floor(Math.random() * 37);
-    ballSpeed = 0.52; 
-    isSpinning = true;
+    ballSpeed = 0.52; isSpinning = true;
 }
 
 function showResult() {
@@ -270,8 +286,6 @@ function closeWinMsg() {
     currentBets = [];
     updateUI();
 }
-
-updateUI();
 </script>
 </body>
 </html>
