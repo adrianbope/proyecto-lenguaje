@@ -1,19 +1,137 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Ofertas</title>
-<link rel="stylesheet" href="css/styles.css">
+    <meta charset="UTF-8">
+    <title>Lotto - Centro de Ofertas</title>
+    <style>
+        :root { --gold: #ffd700; --dark: #0e1a11; --green: #1b4d3e; }
+        body { background: var(--dark); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; text-align: center; }
+        .nav-bar { margin-bottom: 30px; text-align: left; max-width: 1000px; margin-left: auto; margin-right: auto; }
+        .btn-volver { color: white; text-decoration: none; border: 1px solid var(--gold); padding: 8px 15px; border-radius: 5px; transition: 0.3s; font-weight: bold; }
+        .btn-volver:hover { background: var(--gold); color: black; }
+        
+        h1 { color: var(--gold); text-transform: uppercase; letter-spacing: 2px; }
+        .container { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; max-width: 1000px; margin: 0 auto; }
+        
+        .oferta-card { background: var(--green); border: 2px solid var(--gold); border-radius: 15px; padding: 25px; display: flex; flex-direction: column; align-items: center; box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+        .bonus-amount { font-size: 45px; color: var(--gold); font-weight: bold; margin: 15px 0; text-shadow: 2px 2px 5px rgba(0,0,0,0.5); }
+        
+        button { 
+            background: var(--gold); color: black; border: none; padding: 15px 30px; 
+            font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.3s; width: 100%;
+        }
+        button:disabled { background: #555; cursor: not-allowed; opacity: 0.6; color: #ccc; }
+        button:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(255,215,0,0.4); }
+
+        .info-tiempo { font-size: 13px; color: #ffd700; margin-top: 10px; font-weight: bold; min-height: 18px; }
+        p { color: #ccc; font-size: 0.9rem; }
+    </style>
 </head>
 <body>
 
-<h1>Ofertas</h1>
+    <div class="nav-bar">
+        <a href="index.html" class="btn-volver">🏠 Volver al Inicio</a>
+    </div>
 
-<img src="img/ofertas.png" alt="Ofertas" width="200">
+    <h1>🎁 TUS RECOMPENSAS</h1>
+    <p>Aumenta tu saldo con nuestros bonos exclusivos.</p>
 
-<p>Bonos y promociones</p>
+    <div class="container">
+        <div class="oferta-card">
+            <h3>Bono de Bienvenida</h3>
+            <p>Solo disponible una vez</p>
+            <div class="bonus-amount">50€</div>
+            <button id="btn-bienvenida" onclick="reclamarUnica(50, 'bienvenida')">RECLAMAR</button>
+            <div class="info-tiempo" id="info-bienvenida"></div>
+        </div>
 
-<a href="index.html"><button>Volver</button></a>
+        <div class="oferta-card">
+            <h3>Regalo Diario</h3>
+            <p>Disponible cada 24 horas</p>
+            <div class="bonus-amount">10€</div>
+            <button id="btn-diario" onclick="reclamarTemporal(10, 'diario', 1)">RECLAMAR</button>
+            <div class="info-tiempo" id="info-diario"></div>
+        </div>
 
+        <div class="oferta-card">
+            <h3>Recompensa Mensual</h3>
+            <p>Disponible cada 30 días</p>
+            <div class="bonus-amount">100€</div>
+            <button id="btn-mensual" onclick="reclamarTemporal(100, 'mensual', 30)">RECLAMAR</button>
+            <div class="info-tiempo" id="info-mensual"></div>
+        </div>
+    </div>
+
+    <script>
+        let session = JSON.parse(localStorage.getItem('session')) || { user: 'Invitado', balance: 0 };
+
+        function reclamarUnica(cantidad, tipo) {
+            let unicas = JSON.parse(localStorage.getItem('ofertas_unicas')) || [];
+            if (unicas.includes(tipo)) return;
+            sumarSaldo(cantidad);
+            unicas.push(tipo);
+            localStorage.setItem('ofertas_unicas', JSON.stringify(unicas));
+            alert(`✅ ¡Has recibido ${cantidad}€ de Bienvenida!`);
+            actualizarUI();
+        }
+
+        function reclamarTemporal(cantidad, tipo, dias) {
+            const ahora = new Date().getTime();
+            let registros = JSON.parse(localStorage.getItem('registro_tiempos')) || {};
+            sumarSaldo(cantidad);
+            registros[tipo] = ahora;
+            localStorage.setItem('registro_tiempos', JSON.stringify(registros));
+            alert(`✅ ¡Has reclamado ${cantidad}€ con éxito!`);
+            actualizarUI();
+        }
+
+        function sumarSaldo(cantidad) {
+            session.balance = parseFloat(session.balance) + cantidad;
+            localStorage.setItem('session', JSON.stringify(session));
+            let users = JSON.parse(localStorage.getItem('users')) || [];
+            let idx = users.findIndex(u => u.user === session.user);
+            if(idx !== -1) {
+                users[idx].balance = session.balance;
+                localStorage.setItem('users', JSON.stringify(users));
+            }
+        }
+
+        function actualizarUI() {
+            const ahora = new Date().getTime();
+            const unicas = JSON.parse(localStorage.getItem('ofertas_unicas')) || [];
+            const tiempos = JSON.parse(localStorage.getItem('registro_tiempos')) || {};
+
+            if (unicas.includes('bienvenida')) {
+                document.getElementById('btn-bienvenida').disabled = true;
+                document.getElementById('btn-bienvenida').innerText = "CANJEADO";
+            }
+
+            revisarBonoTemporal('diario', 1, tiempos, ahora, 'btn-diario', 'info-diario');
+            revisarBonoTemporal('mensual', 30, tiempos, ahora, 'btn-mensual', 'info-mensual');
+        }
+
+        function revisarBonoTemporal(id, diasConfig, registros, ahora, idBtn, idInfo) {
+            const btn = document.getElementById(idBtn);
+            const info = document.getElementById(idInfo);
+            if (registros[id]) {
+                const tiempoNecesario = diasConfig * 24 * 60 * 60 * 1000;
+                const diferencia = ahora - registros[id];
+                if (diferencia < tiempoNecesario) {
+                    btn.disabled = true;
+                    btn.innerText = "ESPERANDO";
+                    const restanteMs = tiempoNecesario - diferencia;
+                    const diasR = Math.floor(restanteMs / (1000 * 60 * 60 * 24));
+                    const horasR = Math.floor((restanteMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    info.innerText = diasR > 0 ? `Disponible en ${diasR}d y ${horasR}h` : `Disponible en ${horasR} horas`;
+                } else {
+                    btn.disabled = false;
+                    btn.innerText = "RECLAMAR";
+                    info.innerText = "¡Ya disponible!";
+                }
+            }
+        }
+
+        window.onload = actualizarUI;
+    </script>
 </body>
 </html>

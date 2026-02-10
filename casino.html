@@ -1,19 +1,80 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Casino</title>
-<link rel="stylesheet" href="css/styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Casino - Selección de Juego</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            height: 100vh;
+            background: linear-gradient(180deg, #0b132b, #03071e);
+            font-family: Arial, sans-serif;
+            color: white;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        h1 { padding: 20px; text-align: center; }
+        .menu {
+            flex-grow: 1;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 20px;
+            padding: 20px;
+        }
+        .card {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            border-radius: 14px;
+            position: relative;
+            border: 2px solid #ffd700;
+        }
+        .card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.3s;
+        }
+        .card:hover img { transform: scale(1.05); }
+        .card-title {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            text-align: center;
+            background: rgba(0,0,0,0.7);
+            padding: 10px 0;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        .back-btn {
+            background: #444;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            align-self: center;
+            margin-bottom: 20px;
+        }
+    </style>
 </head>
 <body>
+    <h1>Elige tu Juego</h1>
+    
+    <div class="menu">
+        <a href="ruleta.html" class="card">
+            <img src="imagenes/ruleta_logo.png" alt="Ruleta">
+            <div class="card-title">RULETA 3D</div>
+        </a>
 
-<h1>Casino</h1>
+        <a href="blackjack/blackjack.html" class="card">
+            <img src="imagenes/blackjack_logo.png" alt="Blackjack">
+            <div class="card-title">BLACKJACK</div>
+        </a>
+    </div>
 
-<img src="img/casino.png" alt="Casino" width="200">
-
-<p>Aquí va el contenido del casino</p>
-
-<a href="index.html"><button>Volver</button></a>
-
+    <a href="index.html" class="back-btn">Volver al Inicio</a>
 </body>
 </html>

@@ -1,19 +1,173 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Mis apuestas</title>
-<link rel="stylesheet" href="css/styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lotto - Mis Apuestas</title>
+    <style>
+        :root {
+            --gold: #ffd700;
+            --dark-green: #0e1a11;
+            --light-green: #1b4d3e;
+        }
+
+        body {
+            background-color: var(--dark-green);
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        h1 {
+            color: var(--gold);
+            text-transform: uppercase;
+            margin: 0;
+            font-size: 1.4rem;
+            letter-spacing: 1px;
+        }
+
+        /* BOTÓN QUE LLEVA AL INDEX */
+        .btn-volver {
+            color: white;
+            text-decoration: none;
+            border: 1px solid var(--gold);
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .btn-volver:hover {
+            background: var(--gold);
+            color: black;
+        }
+
+        #contenedor-apuestas {
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .ticket {
+            background: var(--light-green);
+            border-left: 5px solid var(--gold);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+        }
+
+        .fecha {
+            font-size: 0.75rem;
+            color: #888;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .detalles {
+            font-weight: bold;
+            white-space: pre-line;
+            margin-bottom: 12px;
+            line-height: 1.4;
+            color: #efefef;
+        }
+
+        .info-pago {
+            display: flex;
+            justify-content: space-between;
+            border-top: 1px solid rgba(255, 215, 0, 0.2);
+            padding-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        .oro {
+            color: var(--gold);
+            font-weight: bold;
+        }
+
+        .vacio {
+            text-align: center;
+            margin-top: 100px;
+            color: #666;
+            font-style: italic;
+        }
+
+        .btn-borrar {
+            margin-top: 30px;
+            background: none;
+            border: 1px solid #ff4444;
+            color: #ff4444;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: 0.3s;
+        }
+
+        .btn-borrar:hover {
+            background: #ff4444;
+            color: white;
+        }
+    </style>
 </head>
 <body>
 
-<h1>Mis apuestas</h1>
+    <div class="header">
+        <h1>📋 Historial</h1>
+        <a href="index.html" class="btn-volver">🏠 INICIO</a>
+    </div>
 
-<img src="img/apuestas.png" alt="Mis apuestas" width="200">
+    <div id="contenedor-apuestas">
+        </div>
 
-<p>Historial de apuestas</p>
+    <button class="btn-borrar" onclick="limpiarHistorial()">Borrar Historial</button>
 
-<a href="index.html"><button>Volver</button></a>
+    <script>
+        function cargarMisApuestas() {
+            // Leemos del LocalStorage
+            const historial = JSON.parse(localStorage.getItem('mis_apuestas_guardadas')) || [];
+            const contenedor = document.getElementById('contenedor-apuestas');
+
+            if (historial.length === 0) {
+                contenedor.innerHTML = '<div class="vacio">No hay apuestas registradas.</div>';
+                return;
+            }
+
+            // Renderizamos de más reciente a más antigua
+            contenedor.innerHTML = historial.reverse().map(apuesta => `
+                <div class="ticket">
+                    <span class="fecha">${apuesta.fecha}</span>
+                    <div class="detalles">${apuesta.detalles}</div>
+                    <div class="info-pago">
+                        <span>Apostado: <span class="oro">${apuesta.dinero}€</span></span>
+                        <span>Posible: <span class="oro">${apuesta.posible}€</span></span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function limpiarHistorial() {
+            if(confirm("¿Deseas eliminar todo el historial de apuestas?")) {
+                localStorage.removeItem('mis_apuestas_guardadas');
+                location.reload();
+            }
+        }
+
+        window.onload = cargarMisApuestas;
+    </script>
 
 </body>
 </html>

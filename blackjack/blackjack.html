@@ -1,22 +1,227 @@
 <!DOCTYPE html>
-<html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<link rel="stylesheet" href="css/style.css" />
-		<title>Black Jack</title>
-	</head>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Blackjack Sensitive</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; touch-action: manipulation; }
+        
+        body { 
+            background: #0b132b; 
+            color: white; 
+            font-family: 'Segoe UI', system-ui, sans-serif; 
+            height: 100vh; 
+            height: 100dvh;
+            overflow: hidden; 
+            display: flex; 
+            flex-direction: column;
+        }
 
-	<body>
-		<div id="title">Juego del Blackjack</div>
-		<div id="canvasDiv"><canvas id="canvas"></canvas></div>
-		<div id="botones">
-			<input type="button" value="Pedir Carta" onclick="pedirCarta()" id="pedir" class="button" >
-			<input type="button" value="Jugar otra vez!" id="reset" onclick="playagain()" >
-			<input type="button" value="Plantarme" onclick="plantarme()" id="plantar" class="button" >
-		</div>
-		<div id="info"></div>
-		<script src="js/blackjack.js"></script>
-	</body>
+        .header-bar { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 10px 15px; 
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+            z-index: 10;
+        }
+
+        .stat-box { font-size: 1.2rem; color: #ffd700; font-weight: 800; }
+
+        .table { 
+            flex: 1; 
+            background: radial-gradient(circle at center, #1a472a 0%, #0d2617 100%); 
+            border: 6px solid #3d2b1f; 
+            border-radius: 40px;
+            width: 95%; 
+            max-width: 600px; 
+            margin: 10px auto; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: space-evenly;
+            box-shadow: inset 0 0 100px rgba(0,0,0,0.8);
+            position: relative;
+        }
+
+        .hand-container { display: flex; flex-direction: column; align-items: center; width: 100%; }
+
+        .score-badge {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            border: 1px solid #ffd700;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .hand { 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 120px;
+            width: 100%;
+        }
+
+        .card-img { 
+            width: clamp(60px, 15vw, 85px);
+            height: clamp(85px, 22vw, 120px);
+            background: white; 
+            border-radius: 8px; 
+            margin: 0 -20px; 
+            color: black; 
+            font-weight: bold; 
+            font-size: clamp(1rem, 4vw, 1.4rem);
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            border: 1px solid #999; 
+            box-shadow: 4px 4px 10px rgba(0,0,0,0.5);
+            animation: dealCard 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            user-select: none;
+        }
+
+        @keyframes dealCard {
+            0% { transform: translateY(-50vh) rotate(45deg); opacity: 0; }
+            100% { transform: translateY(0) rotate(0deg); opacity: 1; }
+        }
+
+        #message { 
+            font-size: clamp(1.2rem, 5vw, 2rem); 
+            font-weight: 900; 
+            text-align: center; 
+            color: #ffd700; 
+            text-shadow: 2px 2px 8px black;
+            min-height: 2.5rem;
+            padding: 0 10px;
+        }
+
+        .ui-area { 
+            background: rgba(15, 23, 42, 0.95); 
+            padding: 15px 10px; 
+            border-top: 2px solid #3d2b1f;
+            box-shadow: 0 -10px 20px rgba(0,0,0,0.4);
+        }
+
+        .betting-controls { 
+            display: flex; 
+            flex-direction: column;
+            align-items: center; 
+            gap: 12px; 
+        }
+
+        .chip-group { 
+            display: flex; 
+            gap: clamp(8px, 2vw, 15px); 
+            justify-content: center;
+            width: 100%;
+        }
+
+        .chip {
+            width: clamp(45px, 12vw, 60px); 
+            height: clamp(45px, 12vw, 60px); 
+            border-radius: 50%; 
+            border: 3px dashed rgba(255,255,255,0.6);
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            font-weight: bold; 
+            cursor: pointer; 
+            font-size: 0.8rem;
+            transition: transform 0.1s active;
+            box-shadow: 0 5px 0px rgba(0,0,0,0.4);
+        }
+        
+        .chip:active { transform: scale(0.9) translateY(2px); }
+
+        .chip-10 { background: #3498db; }
+        .chip-50 { background: #e67e22; }
+        .chip-100 { background: #e74c3c; }
+        .chip-500 { background: #9b59b6; }
+
+        .action-btns { 
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .btn-double-wide { grid-column: span 2; }
+
+        button { 
+            padding: 12px; 
+            border-radius: 12px; 
+            border: none; 
+            font-weight: 800; 
+            cursor: pointer; 
+            text-transform: uppercase; 
+            font-size: 0.9rem;
+            transition: filter 0.2s;
+        }
+
+        .btn-play { background: #27ae60; color: white; grid-column: span 2; }
+        .btn-clear { background: #7f8c8d; color: white; }
+        .btn-action { background: #2980b9; color: white; }
+        .btn-double { background: #8e44ad; color: white; }
+        .btn-stand { background: #f1c40f; color: black; }
+
+        input[type="range"] { width: 80px; }
+    </style>
+</head>
+<body>
+
+    <div class="header-bar">
+        <div class="stat-box">$<span id="balance-val">0.00</span></div>
+        <div class="volume-control">
+            <input type="range" id="volumeSlider" min="0" max="1" step="0.1" value="0.3">
+        </div>
+    </div>
+
+    <div class="table">
+        <div class="hand-container">
+            <div id="dealer-score" class="score-badge">0</div>
+            <div id="dealer-hand" class="hand"></div>
+        </div>
+
+        <div id="message">APUESTA</div>
+
+        <div class="hand-container">
+            <div id="player-score" class="score-badge">0</div>
+            <div id="player-hand" class="hand"></div>
+        </div>
+    </div>
+
+    <div class="ui-area">
+        <div id="betting-ui">
+            <div style="text-align:center; margin-bottom: 10px; font-weight: bold; color: #ffd700;">
+                APUESTA: $<span id="bet-amount">0</span>
+            </div>
+            <div class="betting-controls">
+                <div class="chip-group">
+                    <div class="chip chip-10" onclick="addChip(10)">10</div>
+                    <div class="chip chip-50" onclick="addChip(50)">50</div>
+                    <div class="chip chip-100" onclick="addChip(100)">100</div>
+                    <div class="chip chip-500" onclick="addChip(500)">500</div>
+                </div>
+                <div class="action-btns">
+                    <button onclick="clearBet()" class="btn-clear">Limpiar</button>
+                    <button onclick="startGame()" class="btn-play">Repartir</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="game-ui" class="action-btns" style="display:none;">
+            <button onclick="hit()" class="btn-action">Pedir</button>
+            <button onclick="stand()" class="btn-stand">Plantarse</button>
+            <button id="btn-double" onclick="doubleDown()" class="btn-double btn-double-wide">Doblar Apuesta</button>
+        </div>
+    </div>
+
+    <script src="blackjack.js"></script>
+</body>
 </html>

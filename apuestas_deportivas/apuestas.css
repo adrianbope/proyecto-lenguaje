@@ -1,0 +1,190 @@
+body {
+    background: #1e1e1e;
+    font-family: Arial, sans-serif;
+    color: white;
+    padding: 20px;
+}
+
+.tabla {
+    max-width: 800px;
+    margin: auto;
+}
+
+.fecha {
+    color: #bbb;
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+.partido {
+    background: #2a2a2a;
+    display: flex;
+    justify-content: space-between;
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+
+.equipos {
+    width: 55%;
+}
+
+.equipo {
+    font-size: 15px;
+    margin-bottom: 4px;
+}
+
+.hora {
+    font-size: 12px;
+    color: #aaa;
+}
+
+.apuestas {
+    display: flex;
+    width: 40%;
+    justify-content: space-between;
+}
+
+.opcion {
+    text-align: center;
+}
+
+.opcion span {
+    display: block;
+    font-size: 12px;
+    color: #ccc;
+    margin-bottom: 5px;
+}
+
+button {
+    background: #3a3a3a;
+    color: #f5c542;
+    border: none;
+    padding: 10px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+button:hover {
+    background: #4a4a4a;
+}
+
+button.seleccionado {
+    background: #2ecc71;
+    color: #111;
+    box-shadow: 0 0 8px rgba(46, 204, 113, 0.8);
+}
+
+
+#ticket {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: #111;
+    color: white;
+    padding: 15px 20px;
+    border-top: 2px solid #2ecc71;
+    font-family: Arial, sans-serif;
+    z-index: 999;
+}
+
+#ticket h3 {
+    margin: 0 0 10px 0;
+    color: #2ecc71;
+}
+
+.apuesta-item {
+    font-size: 14px;
+    margin-bottom: 5px;
+    color: #f5c542;
+}
+
+.ticket-extra {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ticket-extra input {
+    margin-left: 5px;
+    padding: 6px;
+    border-radius: 4px;
+    border: none;
+    width: 100px;
+}
+
+#cuotaTotal, #ganancia {
+    font-size: 14px;
+    color: #2ecc71;
+    font-weight: bold;
+}
+
+#confirmar {
+    margin-top: 8px;
+    background: #f5c542;
+    color: #111;
+    border-radius: 6px;
+    padding: 10px;
+}
+
+#confirmar:hover {
+    background: #ffd966;
+}
+
+#apostar {
+    margin-top: 10px;
+    background: #2ecc71;
+    color: #111;
+    font-weight: bold;
+    border-radius: 6px;
+    padding: 10px;
+}
+
+#apostar:hover {
+    background: #27ae60;
+}
+
+.ticket-extra input {
+    padding: 6px;
+    border-radius: 4px;
+    border: none;
+    width: 100px;
+    margin-left: 5px;
+}
+
+.equipo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.equipo img {
+    width: 22px;
+    height: 22px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+#partidos-container {
+    padding-bottom: 180px; 
+}
+
+.nav-bar {
+  background: #111;
+  padding: 10px;
+  text-align: center;
+}
+
+.nav-bar a {
+  color: white;
+  margin: 0 15px;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.nav-bar a:hover {
+  color: #00ff99;
+}
